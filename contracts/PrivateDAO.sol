@@ -9,18 +9,14 @@ import "./SecretStorage.sol";
 
 contract PrivateDAO is EncryptedERC20, SecretStorage {
 
-    uint256 MAX_INT = 2**256 - 1;
     euint32 private minMemberTokenBalance;
 
     // We represent each voting process as a struct
     // To create a new proposal, we call the `createProposal` function
     struct Proposal {
-        address creator; 
-        bytes[8] topicKey;
-
-        uint256 endBlockNum; 
-        string ipfsHash; 
-        // TODO: Accumulate perhaps?
+        uint256 keyStorageID;
+        uint64 endBlockNum; 
+        uint256 ipfsHash;
         euint32 yesVotes;
         euint32 noVotes;
         euint32 abstainVotes;
@@ -28,7 +24,6 @@ contract PrivateDAO is EncryptedERC20, SecretStorage {
     uint256 public lastProposalID; 
     mapping(uint256 => Proposal) public proposals;
 
-    // Modifier to check if a process exists
     modifier proposalExists(uint256 _proposalID) {
         require(lastProposalID >= _proposalID && _proposalID != 0, "Process does not exist");
         _;
@@ -69,41 +64,54 @@ contract PrivateDAO is EncryptedERC20, SecretStorage {
         return encSecret;
     }
 
-    // function createProposal (string calldata _ipfsHash, bytes[8] calldata _topicKey, uint256 _endBlockNum) 
-    //     public returns (uint256) {
+    function createProposal (uint256 _keyStorageID, uint256 _ipfsHash, uint64 _endBlockNum) 
+        public returns (uint256) {
         
-    //     lastProposalID++; 
+        lastProposalID++; 
 
-    //     Proposal storage proposal = proposals[lastProposalID];
-    //     proposal.creator = msg.sender;
-    //     proposal.topicKey = _topicKey;
-    //     proposal.ipfsHash = _ipfsHash;
-    //     proposal.endBlockNum = _endBlockNum;
-    //     return lastProposalID;   
-    // }
+        Proposal storage proposal = proposals[lastProposalID];
+        proposal.keyStorageID = _keyStorageID;
+        proposal.ipfsHash = _ipfsHash;
+        proposal.endBlockNum = _endBlockNum;
+        return lastProposalID;   
+    }
 
-    // function vote(uint256 _proposalID, bytes calldata _voteOption) proposalExists(_proposalID) public {
-    //     Proposal storage proposal = proposals[_proposalID];
-    //     euint32 voteOption = TFHE.asEuint32(_voteOption);
-    //     euint32 weight = balances[msg.sender];
+    function getProposalKeySecretID(uint256 _proposalID) proposalExists(_proposalID) public view returns (uint256) {
+        Proposal storage proposal = proposals[_proposalID];
+        return proposal.keyStorageID;
+    }
 
-    //     // We consider the vote to be a 
-    //     // 1. "yes" if voteOption is 1, 
-    //     // 2. "no"  if voteOption is -1 (MAX_INT) 
-    //     // 3. "abstain" if voteOption is 0
-    //     if (TFHE.eq(voteOption, TFHE.asEuint32(1))) {
-    //         proposal.yesVotes = TFHE.add(proposal.yesVotes, weight);
-    //     } else if (TFHE.eq(_voteOption, TFHE.asEuint32(MAX_INT))) {
-    //         proposal.noVotes = TFHE.add(proposal.noVotes, weight);
-    //     } else {
-    //         proposal.abstainVotes = TFHE.add(proposal.abstainVotes, weight);
-    //     }
-    // }
+    function vote(uint256 _proposalID, bytes calldata _voteOption) proposalExists(_proposalID) public {
+        Proposal storage proposal = proposals[_proposalID];
+        require(proposal.endBlockNum > block.number, "Proposal has ended");
+        euint32 voteOption = TFHE.asEuint32(_voteOption);
+        euint32 weight = balances[msg.sender];
 
-    // function viewProposalTopic(uint256 proposalID) public {
+        // We consider the vote to be a 
+        // 1. "yes" if voteOption is 1, 
+        // 2. "no"  if voteOption is 2  
+        // 3. "abstain" if voteOption is 0
+        euint32 dummy = TFHE.asEuint32(0);
+        ebool votedYes = TFHE.eq(voteOption, TFHE.asEuint32(1));
+        ebool votedNo = TFHE.eq(voteOption, TFHE.asEuint32(2));
+        ebool abstained = TFHE.eq(voteOption, TFHE.asEuint32(0));
 
-    // }
+        proposal.yesVotes = TFHE.cmux(votedYes, TFHE.add(proposal.yesVotes, weight), TFHE.add(proposal.yesVotes, dummy));
+        proposal.noVotes = TFHE.cmux(votedNo, TFHE.add(proposal.noVotes, weight), TFHE.add(proposal.noVotes, dummy));
+        proposal.abstainVotes = TFHE.cmux(abstained, TFHE.add(proposal.abstainVotes, weight), TFHE.add(proposal.abstainVotes, dummy));
+    }
 
-    // viewProcessTopic (processId) view authenticated -> enc topicKey
+    function getResult(uint256 _proposalID, bytes32 publicKey, bytes calldata signature) proposalExists(_proposalID) public view 
+        onlySignedPublicKey(publicKey, signature) returns (euint32, euint32, euint32) {
+        
+        Proposal storage proposal = proposals[_proposalID];
+        require(proposal.endBlockNum <= block.number, "Proposal hasn't ended");
+
+        ebool _mayBeMember = _isMember(msg.sender);
+
+        return (TFHE.cmux(_mayBeMember, proposal.yesVotes, TFHE.asEuint32(0)),
+        TFHE.cmux(_mayBeMember, proposal.noVotes, TFHE.asEuint32(0)),
+        TFHE.cmux(_mayBeMember, proposal.abstainVotes, TFHE.asEuint32(0)));
+    }
 
 }

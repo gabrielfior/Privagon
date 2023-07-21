@@ -7,7 +7,7 @@ import { resolve } from "path";
 
 import "./tasks/accounts";
 import "./tasks/add";
-import "./tasks/deployIpfs";
+//import "./tasks/deployIpfs";
 import "./tasks/getCount";
 
 const dotenvConfigPath: string = process.env.DOTENV_CONFIG_PATH || "./.env";

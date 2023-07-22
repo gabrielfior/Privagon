@@ -1,204 +1,43 @@
-# Hardhat Template [![Open in Gitpod][gitpod-badge]][gitpod] [![Github Actions][gha-badge]][gha] [![Hardhat][hardhat-badge]][hardhat] [![License: MIT][license-badge]][license]
+# Privagon
 
-[gitpod]: https://gitpod.io/#https://github.com/fhenixprotocol/hardhat-template
-[gitpod-badge]: https://img.shields.io/badge/Gitpod-Open%20in%20Gitpod-FFB45B?logo=gitpod
-[gha]: https://github.com/fhenixprotocol/hardhat-template/actions
-[gha-badge]: https://github.com/fhenixprotocol/hardhat-template/actions/workflows/ci.yml/badge.svg
-[hardhat]: https://hardhat.org/
-[hardhat-badge]: https://img.shields.io/badge/Built%20with-Hardhat-FFDB1C.svg
-[license]: https://opensource.org/licenses/MIT
-[license-badge]: https://img.shields.io/badge/License-MIT-blue.svg
+**Private DAOs**
 
-A Hardhat-based template for developing Solidity smart contracts, with sensible defaults.
+Links:
 
-- [Hardhat](https://github.com/nomiclabs/hardhat): compile, run and test smart contracts
-- [TypeChain](https://github.com/ethereum-ts/TypeChain): generate TypeScript bindings for smart contracts
-- [Ethers](https://github.com/ethers-io/ethers.js/): renowned Ethereum library and wallet implementation
-- [Solhint](https://github.com/protofire/solhint): code linter
-- [Solcover](https://github.com/sc-forks/solidity-coverage): code coverage
-- [Prettier Plugin Solidity](https://github.com/prettier-solidity/prettier-plugin-solidity): code formatter
+- Description of proposal: https://hackmd.io/0hK5aKi4TJ6ETWzIfsmcUw?view
+- Videos:
+  - Smart contracts:
+    https://www.loom.com/share/8648427cae17405b863124527ffb5f27?sid=76a682d6-d0a8-4885-8d50-8b0774f09417
+  - Hardhat tests: https://www.loom.com/share/d61f0587209043afb8401df371abcb38?sid=86a0af4a-05e9-4abf-afb9-62a506841f8a
 
-## Getting Started
+Submission for the Zama & Fhenix hackathon.
 
-Click the [`Use this template`](https://github.com/fhenixprotocol/hardhat-template/generate) button at the top of the
-page to create a new repository with this repo as the initial state.
+### Build
 
-## Features
+`pnpm install `
 
-This template builds upon the frameworks and libraries mentioned above, so for details about their specific features,
-please consult their respective documentations.
+`pnpm compile`
 
-For example, for Hardhat, you can refer to the [Hardhat Tutorial](https://hardhat.org/tutorial) and the
-[Hardhat Docs](https://hardhat.org/docs). You might be in particular interested in reading the
-[Testing Contracts](https://hardhat.org/tutorial/testing-contracts) section.
+### Run hardhat tests
 
-### Sensible Defaults
+Currently we have 2 tests implemented
 
-This template comes with sensible default configurations in the following files:
+- 1
 
-```text
-├── .editorconfig
-├── .eslintignore
-├── .eslintrc.yml
-├── .gitignore
-├── .prettierignore
-├── .prettierrc.yml
-├── .solcover.js
-├── .solhint.json
-└── hardhat.config.ts
+```
+# Contract owner mints tokens and transfers some to Alice privately
+"Mint tokens to owner, transfer tokens to Alice"
 ```
 
-### VSCode Integration
+- 2
 
-This template is IDE agnostic, but for the best user experience, you may want to use it in VSCode alongside Nomic
-Foundation's [Solidity extension](https://marketplace.visualstudio.com/items?itemName=NomicFoundation.hardhat-solidity).
-
-### GitHub Actions
-
-This template comes with GitHub Actions pre-configured. Your contracts will be linted and tested on every push and pull
-request made to the `main` branch.
-
-Note though that to make this work, you must use your `INFURA_API_KEY` and your `MNEMONIC` as GitHub secrets.
-
-You can edit the CI script in [.github/workflows/ci.yml](./.github/workflows/ci.yml).
-
-## Usage
-
-### Pre Requisites
-
-Before being able to run any command, you need to create a `.env` file and set a BIP-39 compatible mnemonic as an
-environment variable. You can follow the example in `.env.example`. If you don't already have a mnemonic, you can use
-this [website](https://iancoleman.io/bip39/) to generate one.
-
-Then, proceed with installing dependencies:
-
-```sh
-$ pnpm install
+```
+# Generates new secret locally, uploads encrypted version to the blockchain using FHE, then retrieves the encrypted version and decrypts it locally, asserting that the same key was obtained.
+it("Upload secret", async () => {
 ```
 
-### Compile
+Run tests by executing
 
-Compile the smart contracts with Hardhat:
-
-```sh
-$ pnpm compile
 ```
-
-### TypeChain
-
-Compile the smart contracts and generate TypeChain bindings:
-
-```sh
-$ pnpm typechain
+pnpm hardhat test
 ```
-
-### Test
-
-Run the tests with Hardhat:
-
-```sh
-$ pnpm test
-```
-
-### Lint Solidity
-
-Lint the Solidity code:
-
-```sh
-$ pnpm lint:sol
-```
-
-### Lint TypeScript
-
-Lint the TypeScript code:
-
-```sh
-$ pnpm lint:ts
-```
-
-### Coverage
-
-Generate the code coverage report:
-
-```sh
-$ pnpm coverage
-```
-
-### Report Gas
-
-See the gas usage per unit test and average gas per method call:
-
-```sh
-$ REPORT_GAS=true pnpm test
-```
-
-### Clean
-
-Delete the smart contract artifacts, the coverage reports and the Hardhat cache:
-
-```sh
-$ pnpm clean
-```
-
-### Deploy
-
-Deploy the contracts to Hardhat Network:
-
-```sh
-$ pnpm deploy:contracts"
-```
-
-### Tasks
-
-#### Deploy Counter
-
-Deploy a new instance of the Counter contract via a task:
-
-```sh
-$ pnpm task:deployCounter --network localfhenix
-```
-
-#### Add count
-
-Run the `addCount` task on the LocalFhenix network:
-
-```sh
-$ pnpm task:addCount --network localfhenix --amount 12 --account 3
-```
-
-## Tips
-
-### Syntax Highlighting
-
-If you use VSCode, you can get Solidity syntax highlighting with the
-[hardhat-solidity](https://marketplace.visualstudio.com/items?itemName=NomicFoundation.hardhat-solidity) extension.
-
-## Using GitPod
-
-[GitPod](https://www.gitpod.io/) is an open-source developer platform for remote development.
-
-To view the coverage report generated by `pnpm coverage`, just click `Go Live` from the status bar to turn the server
-on/off.
-
-## Local development with Ganache
-
-### Install LocalFhenix
-
-LocalFhenix is available through a docker image. To pull it, run:
-
-```sh
-$ docker pull ghcr.io/fhenixprotocol/fhenix-devnet:0.1.5
-```
-
-### Run a Development Blockchain
-
-```sh
-$ docker run -it -p 8545:8545 -p 6000:6000 \
-  --name localfhenix ghcr.io/fhenixprotocol/fhenix-devnet:0.1.5
-```
-
-Make sure to set the mnemonic in your `.env` file to that of the instance running with LocalFhenix.
-
-## License
-
-This project is licensed under MIT.

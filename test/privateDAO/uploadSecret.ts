@@ -99,27 +99,14 @@ describe("Token contract", () => {
   });
 
   it.skip("create proposal", async () => {
-    // upload secret
-
-    const keyArray = buildChunkedEncryptedKey(key, instance);
-    console.log("keyArray", keyArray);
-    await privateDAO.uploadSecret(keyArray);
-    const secretId = 1; // first secret
-    await waitForBlock(hre);
-
-    // IPFS proposal created previously - create dynamically afterwards
-    let ipfsHash = "bafkreihpyqt4c6uyayvvaof7kmfp7sqtuna63oadfegkgmgnbvm7ylvvta";
-    const currBlockNumber = provider.getBlockNumber();
-
-    // upload proposal to contract
-
-    await privateDAO.createProposal(secretId, ipfsHash, blockNumber + 100);
-
-    // ToDo - Fetch proposal
-    // ToDo - Print proposal
+    // ToDo - Implement me
   });
 
-  it.skip("vote", async () => {});
+  it.skip("vote", async () => {
+    // ToDo - Implement me
+  });
 
-  it.skip("getResult", async () => {});
+  it.skip("getResult", async () => {
+    // ToDo - Implement me
+  });
 });

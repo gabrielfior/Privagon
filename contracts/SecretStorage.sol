@@ -5,12 +5,12 @@ pragma solidity >=0.8.13 <0.9.0;
 import "fhevm/lib/TFHE.sol";
 
 abstract contract SecretStorage {
-    uint256 lastId;
-    mapping (uint256 => euint32[]) secrets;
+    uint256 private lastId;
+    mapping(uint256 => euint32[]) private secrets;
 
     function _uploadSecret(euint32[] memory _secret) internal returns (uint256) {
         lastId++;
-        secrets[lastId] = _secret ;
+        secrets[lastId] = _secret;
         return lastId;
     }
 

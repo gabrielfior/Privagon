@@ -1,5 +1,10 @@
-import { Contract, Wallet } from "ethers";
+import * as crypto from "crypto";
+import { Contract, ContractInterface, Signer, Wallet } from "ethers";
 import * as fhevm from "fhevmjs";
+import * as hre from "hardhat";
+
+import func from "../../deploy/deploy";
+import { PrivateDAO } from "../../types";
 
 export function delay(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -14,7 +19,7 @@ export async function waitForBlock(hre: HardhatRuntimeEnvironment, current?: num
 
 export async function fetchBalance(
   user: Wallet,
-  tokenContract: Contract,
+  tokenContract: PrivateDAO,
   instance: fhevm.FhevmInstance,
 ): Promise<number> {
   const tokenAddress = await tokenContract.getAddress();
@@ -44,4 +49,36 @@ export async function fetchBalance(
   const balance = instance.decrypt(tokenAddress, encryptedBalance);
   console.log("balance", balance);
   return balance;
+}
+
+export async function deployPrivateDAO(instance: fhevm.FhevmInstance, ownerAddress: string): Promise<PrivateDAO> {
+  const minMemberTokenBalance = instance.encrypt32(Number(100));
+  const { deploy } = hre.deployments;
+
+  const privateDAODeploy = await deploy("PrivateDAO", {
+    from: ownerAddress,
+    args: [minMemberTokenBalance],
+    log: true,
+    skipIfAlreadyDeployed: false,
+  });
+
+  const privateDAO = await hre.ethers.getContractAt("PrivateDAO", privateDAODeploy.address);
+  return privateDAO;
+}
+
+export function buildChunkedEncryptedKey(key: Buffer, instance: fhevm.FhevmInstance) {
+  console.log("key", key);
+  let keyArray = [];
+  for (let i = 0; i <= key.length / 4; i++) {
+    const partialKey = key.slice(i * 4, (i + 1) * 4);
+    const intPartialKey = parseInt(partialKey.toString("hex"), 16);
+    const encryptedPartialKey = instance.encrypt32(intPartialKey);
+    keyArray.push(encryptedPartialKey);
+  }
+  return keyArray;
+}
+
+export async function mintToOwner(instance: fhevm.FhevmInstance, privateDAO: PrivateDAO, mintAmount: number) {
+  const resultUint32 = instance.encrypt32(mintAmount);
+  await privateDAO.mint(resultUint32);
 }

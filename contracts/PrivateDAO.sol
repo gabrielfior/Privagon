@@ -59,7 +59,7 @@ contract PrivateDAO is EncryptedMiniMe, SecretStorage {
         uint256 secretId,
         bytes32 publicKey,
         bytes calldata signature
-    ) private view onlySignedPublicKey(publicKey, signature) returns (bytes[] memory) {
+    ) public view onlySignedPublicKey(publicKey, signature) returns (bytes[] memory) {
         euint32[] memory mayBeSecret = _getSecret(secretId);
         bytes[] memory encSecret = new bytes[](mayBeSecret.length);
         for (uint256 i = 0; i < mayBeSecret.length; i++) {

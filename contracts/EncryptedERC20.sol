@@ -8,7 +8,7 @@ import "fhevm/lib/TFHE.sol";
 
 contract EncryptedERC20 is EIP712WithModifier {
     euint32 private totalSupply;
-    string public constant name = "Privagon"; 
+    string public constant name = "Privagon";
     string public constant symbol = "PVG";
     uint8 public constant decimals = 18;
 
@@ -113,12 +113,21 @@ contract EncryptedERC20 is EIP712WithModifier {
 
     // Transfers an encrypted amount.
     function _transfer(address from, address to, euint32 amount) internal {
+        // First, do a preseeding action
         // Make sure the sender has enough tokens.
         TFHE.req(TFHE.le(amount, balances[from]));
 
         // Add to the balance of `to` and subract from the balance of `from`.
         balances[to] = TFHE.add(balances[to], amount);
         balances[from] = TFHE.sub(balances[from], amount);
+
+        _afterTransfer(from, to, amount);
+
+    }
+
+    // Function to execute on Transfer
+    function _afterTransfer(address from, address to, euint32 amount) internal {
+
     }
 
     modifier onlyContractOwner() {

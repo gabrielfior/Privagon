@@ -4,17 +4,18 @@ pragma solidity >=0.8.13 <0.9.0;
 
 import "fhevm/lib/TFHE.sol";
 
-import "./EncryptedERC20.sol";
+import "./EncryptedMiniMe.sol";
 import "./SecretStorage.sol";
 
-contract PrivateDAO is EncryptedERC20, SecretStorage {
+contract PrivateDAO is EncryptedMiniMe, SecretStorage {
     euint32 private minMemberTokenBalance;
 
     // We represent each voting process as a struct
     // To create a new proposal, we call the `createProposal` function
     struct Proposal {
         uint256 keyStorageID;
-        uint64 endBlockNum;
+        uint256 startBlockNum;
+        uint256 endBlockNum;
         uint256 ipfsHash;
         euint32 yesVotes;
         euint32 noVotes;
@@ -68,13 +69,14 @@ contract PrivateDAO is EncryptedERC20, SecretStorage {
         return encSecret;
     }
 
-    function createProposal(uint256 _keyStorageID, uint256 _ipfsHash, uint64 _endBlockNum) public returns (uint256) {
+    function createProposal(uint256 _keyStorageID, uint256 _ipfsHash, uint256 _endBlockNum) public returns (uint256) {
         lastProposalID++;
 
         Proposal storage proposal = proposals[lastProposalID];
         proposal.keyStorageID = _keyStorageID;
         proposal.ipfsHash = _ipfsHash;
         proposal.endBlockNum = _endBlockNum;
+        proposal.startBlockNum = block.number;
         return lastProposalID;
     }
 
@@ -87,7 +89,7 @@ contract PrivateDAO is EncryptedERC20, SecretStorage {
         Proposal storage proposal = proposals[_proposalID];
         require(proposal.endBlockNum > block.number, "Proposal has ended");
         euint32 voteOption = TFHE.asEuint32(_voteOption);
-        euint32 weight = balances[msg.sender];
+        euint32 weight = _balanceOfAt(msg.sender, proposal.startBlockNum);
 
         // We consider the vote to be a
         // 1. "yes" if voteOption is 1,
@@ -120,17 +122,25 @@ contract PrivateDAO is EncryptedERC20, SecretStorage {
         view
         proposalExists(_proposalID)
         onlySignedPublicKey(publicKey, signature)
-        returns (euint32, euint32, euint32)
+        returns (bytes memory, bytes memory, bytes memory)
     {
         Proposal storage proposal = proposals[_proposalID];
         require(proposal.endBlockNum <= block.number, "Proposal hasn't ended");
 
         ebool _mayBeMember = _isMember(msg.sender);
 
+        // Save the results. If not a member you will get (0,0,0)
+        // TODO - make it random
+
+        euint32 maybeForVotes = TFHE.cmux(_mayBeMember, proposal.yesVotes, TFHE.asEuint32(0));
+        euint32 maybeAgainstVotes = TFHE.cmux(_mayBeMember, proposal.noVotes, TFHE.asEuint32(0));
+        euint32 maybeAbstainVotes = TFHE.cmux(_mayBeMember, proposal.abstainVotes, TFHE.asEuint32(0));
+
+
         return (
-            TFHE.cmux(_mayBeMember, proposal.yesVotes, TFHE.asEuint32(0)),
-            TFHE.cmux(_mayBeMember, proposal.noVotes, TFHE.asEuint32(0)),
-            TFHE.cmux(_mayBeMember, proposal.abstainVotes, TFHE.asEuint32(0))
+            TFHE.reencrypt(maybeForVotes, publicKey),
+            TFHE.reencrypt(maybeAgainstVotes, publicKey),
+            TFHE.reencrypt(maybeAbstainVotes, publicKey)
         );
     }
 }

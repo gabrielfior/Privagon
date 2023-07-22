@@ -32,8 +32,8 @@ export async function fetchBalance(
   );
 
   // Save signed token
-  console.log("save signed token");
-  instance.setTokenSignature(tokenAddress, signature);
+  //console.log("save signed token");
+  //instance.setTokenSignature(tokenAddress, signature);
 
   // Call the method with public key + signature
   console.log("fetching encrypted balance");

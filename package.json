@@ -82,7 +82,7 @@
     "test": "hardhat test --network localfhenix",
     "ci-test": "hardhat test --network ci_localfhenix",
     "typechain": "cross-env TS_NODE_TRANSPILE_ONLY=true hardhat typechain",
-    "start:localfhenix": "docker run -it -p 8545:8545 -p 6001:6000 -p 5001:5000 --rm --name localfhenix ghcr.io/fhenixprotocol/fhenix-devnet:0.1.6",
+    "start:localfhenix": "docker run -it -p 8545:8545 -p 6000:6000 -p 5001:5000 --rm --name localfhenix ghcr.io/fhenixprotocol/fhenix-devnet:0.1.6",
     "stop:localfhenix": "docker stop localfhenix && docker rm localfhenix",
     "restart:localfhenix": "stop:localfhenix && start:localfhenix",
     "faucet": "node getFromFaucet.js"

@@ -16,7 +16,7 @@ contract PrivateDAO is EncryptedMiniMe, SecretStorage {
         uint256 keyStorageID;
         uint256 startBlockNum;
         uint256 endBlockNum;
-        uint256 ipfsHash;
+        string ipfsHash;
         euint32 yesVotes;
         euint32 noVotes;
         euint32 abstainVotes;
@@ -69,7 +69,7 @@ contract PrivateDAO is EncryptedMiniMe, SecretStorage {
         return encSecret;
     }
 
-    function createProposal(uint256 _keyStorageID, uint256 _ipfsHash, uint256 _endBlockNum) public returns (uint256) {
+    function createProposal(uint256 _keyStorageID, string calldata _ipfsHash, uint256 _endBlockNum) public returns (uint256) {
         lastProposalID++;
 
         Proposal storage proposal = proposals[lastProposalID];
@@ -121,9 +121,13 @@ contract PrivateDAO is EncryptedMiniMe, SecretStorage {
         public
         view
         proposalExists(_proposalID)
-        onlySignedPublicKey(publicKey, signature)
-        returns (bytes memory, bytes memory, bytes memory)
+        returns (
+            bytes memory,
+            bytes memory
+            // bytes memory // TODO - add abstain
+            )
     {
+        onlySignedPublicKeyFn(publicKey, signature);
         Proposal storage proposal = proposals[_proposalID];
         require(proposal.endBlockNum <= block.number, "Proposal hasn't ended");
 
@@ -132,15 +136,34 @@ contract PrivateDAO is EncryptedMiniMe, SecretStorage {
         // Save the results. If not a member you will get (0,0,0)
         // TODO - make it random
 
-        euint32 maybeForVotes = TFHE.cmux(_mayBeMember, proposal.yesVotes, TFHE.asEuint32(0));
-        euint32 maybeAgainstVotes = TFHE.cmux(_mayBeMember, proposal.noVotes, TFHE.asEuint32(0));
-        euint32 maybeAbstainVotes = TFHE.cmux(_mayBeMember, proposal.abstainVotes, TFHE.asEuint32(0));
 
+        (euint32 maybeForVotes, euint32 maybeAgainstVotes, euint32 maybeAbstainVotes) = getVotes(_mayBeMember, proposal.yesVotes, proposal.noVotes, proposal.abstainVotes);
+
+
+        bytes memory reencForVotes = _getReencValue(maybeForVotes, publicKey);
+        bytes memory reencAgainstVotes = _getReencValue(maybeAgainstVotes, publicKey);
+        // bytes memory reencAbstainVotest = _getReencValue(maybeAbstainVotes, publicKey); // TODO - add abstain
 
         return (
-            TFHE.reencrypt(maybeForVotes, publicKey),
-            TFHE.reencrypt(maybeAgainstVotes, publicKey),
-            TFHE.reencrypt(maybeAbstainVotes, publicKey)
+            reencForVotes,
+            reencAgainstVotes
+            // reencAbstainVotest // TODO - add abstain
         );
     }
+
+    function getVotes(ebool _mayBeMember, euint32 yesVotes, euint32 againstVotes, euint32 abstainVotes) internal view returns(euint32 maybeForVotes, euint32 maybeAgainstVotes, euint32 maybeAbstainVotes) {
+        euint32 zero = TFHE.asEuint32(0);
+
+        maybeForVotes = TFHE.cmux(_mayBeMember, yesVotes, zero);
+        maybeAgainstVotes = TFHE.cmux(_mayBeMember, againstVotes, zero);
+        maybeAbstainVotes = TFHE.cmux(_mayBeMember, abstainVotes, zero);
+    }
+
+    function _getReencValue(euint32 value, bytes32 publicKey) internal view returns(bytes memory) {
+        return TFHE.reencrypt(value, publicKey);
+    }
+
+     function onlySignedPublicKeyFn(bytes32 publicKey, bytes calldata signature) internal view onlySignedPublicKey(publicKey, signature) {
+
+     }
 }

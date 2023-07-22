@@ -44,7 +44,7 @@ contract EncryptedMiniMe is EncryptedERC20 {
     ) internal  {
         if ((checkpoints.length == 0)
         || (checkpoints[checkpoints.length -1].fromBlock < block.number)) {
-               Checkpoint storage newCheckPoint;
+               Checkpoint memory newCheckPoint;
                newCheckPoint.fromBlock =  uint128(block.number);
                newCheckPoint.value = _value;
                checkpoints.push(newCheckPoint);
@@ -72,7 +72,7 @@ contract EncryptedMiniMe is EncryptedERC20 {
     /// @param _owner The address from which the balance will be retrieved
     /// @param _blockNumber The block number when the balance is queried
     /// @return The balance at `_blockNumber`
-    function _balanceOfAt(address _owner, uint _blockNumber) internal
+    function _balanceOfAt(address _owner, uint _blockNumber) internal view
         returns (euint32) {
 
         // These next few lines are used when the balance of the token is
@@ -84,7 +84,7 @@ contract EncryptedMiniMe is EncryptedERC20 {
         // we do not need a secure branching here
         if ((hoistoricBalances[_owner].length == 0)
             || (hoistoricBalances[_owner][0].fromBlock > _blockNumber)) {
-            return TFHE.asEuint32(0);
+            TFHE.asEuint32(0);
 
         // This will return the expected balance during normal situations
         } else {
@@ -98,7 +98,7 @@ contract EncryptedMiniMe is EncryptedERC20 {
     /// @param _block The block number to retrieve the value at
     /// @return The number of tokens being queried
     function _getBalanceAt(Checkpoint[] storage checkpoints, uint _block
-    ) internal returns (euint32) {
+    ) internal view returns (euint32) {
         if (checkpoints.length == 0) return TFHE.asEuint32(0);
 
         // Shortcut for the actual value

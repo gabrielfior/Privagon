@@ -4,7 +4,7 @@
 
 Links:
 
-- [Presentation Deck] (https://docs.google.com/presentation/d/15y_6fAVkUoTbhez8tthjAH7KIDtEXNBRIjZpO3mHflU/edit#slide=id.gc6f80d1ff_0_0): 
+- [Slides](https://docs.google.com/presentation/d/15y_6fAVkUoTbhez8tthjAH7KIDtEXNBRIjZpO3mHflU/edit#slide=id.gc6f80d1ff_0_0)
 - [Description of proposal](https://hackmd.io/0hK5aKi4TJ6ETWzIfsmcUw?view)
 - Videos:
   - [Smart contracts](https://www.loom.com/share/8648427cae17405b863124527ffb5f27?sid=76a682d6-d0a8-4885-8d50-8b0774f09417)    

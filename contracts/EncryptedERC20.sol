@@ -8,8 +8,8 @@ import "fhevm/lib/TFHE.sol";
 
 contract EncryptedERC20 is EIP712WithModifier {
     euint32 private totalSupply;
-    string public constant name = "Naraggara"; // City of Zama's battle
-    string public constant symbol = "NARA";
+    string public constant name = "Privagon"; 
+    string public constant symbol = "PVG";
     uint8 public constant decimals = 18;
 
     // used for output authorization

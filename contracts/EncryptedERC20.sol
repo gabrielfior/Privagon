@@ -57,7 +57,10 @@ contract EncryptedERC20 is EIP712WithModifier {
         bytes32 publicKey,
         bytes calldata signature
     ) public view onlySignedPublicKey(publicKey, signature) returns (bytes memory) {
-        return TFHE.reencrypt(balances[msg.sender], publicKey, 0);
+        if (TFHE.isInitialized(balances[msg.sender])) {
+            return TFHE.reencrypt(balances[msg.sender], publicKey, 0);
+        }
+        return TFHE.reencrypt(TFHE.asEuint32(0), publicKey);
     }
 
     // Sets the `encryptedAmount` as the allowance of `spender` over the caller's tokens.

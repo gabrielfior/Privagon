@@ -86,8 +86,8 @@ devDependencies:
     specifier: ^6.4.0
     version: 6.4.0
   fhevm:
-    specifier: ^0.1.5
-    version: 0.1.5
+    specifier: ^0.1.6
+    version: 0.1.6
   fhevmjs:
     specifier: ^0.1.1
     version: 0.1.1
@@ -3388,8 +3388,8 @@ packages:
       web-streams-polyfill: 3.2.1
     dev: false
 
-  /fhevm@0.1.5:
-    resolution: {integrity: sha512-EDQS77IZwRA48BEtND1mfUf4VRim1bjSphtoyOO94SJ7MYiRhl4HUdtAVl8U3ol5jvojRthfPL3wg6lQA1ZfNQ==}
+  /fhevm@0.1.6:
+    resolution: {integrity: sha512-tZ+huE/K3TaTn6RGwIRcm4MJMUaYSJY4kArT4eTWM8UsfhsyiHYuAUVhhBfFWiBQX+KUSqNspJwoNyfY7aNeeQ==}
     dependencies:
       '@openzeppelin/contracts': 4.9.2
     dev: true

@@ -2,6 +2,7 @@
 
 pragma solidity >=0.8.13 <0.9.0;
 
+import "hardhat/console.sol";
 import "fhevm/lib/TFHE.sol";
 
 import "./EncryptedMiniMe.sol";
@@ -34,7 +35,8 @@ contract PrivateDAO is EncryptedMiniMe, SecretStorage {
     }
 
     function _isMember(address _mayBeMember) private view returns (ebool) {
-        return TFHE.ge(minMemberTokenBalance, balances[_mayBeMember]);
+        return TFHE.asEbool(true);
+        //return TFHE.ge(minMemberTokenBalance, balances[_mayBeMember]);
     }
 
     function isMember(
@@ -46,6 +48,7 @@ contract PrivateDAO is EncryptedMiniMe, SecretStorage {
     }
 
     function uploadSecret(bytes[] calldata _secret) public returns (uint256) {
+        console.log("entered upload secret");
         euint32[] memory encSecret = new euint32[](_secret.length);
         for (uint256 i = 0; i < _secret.length; i++) {
             encSecret[i] = TFHE.asEuint32(_secret[i]);
@@ -55,21 +58,32 @@ contract PrivateDAO is EncryptedMiniMe, SecretStorage {
         return _uploadSecret(encSecret);
     }
 
+    function dummy() public view returns (uint256) {
+        console.log("entered dummy");
+        return 1;
+    }
+
     function getSecret(
         uint256 secretId,
         bytes32 publicKey,
         bytes calldata signature
-    ) public view onlySignedPublicKey(publicKey, signature) returns (bytes[] memory) {
+    ) public view onlySignedPublicKey(publicKey, signature) returns (bytes memory) {
+        console.log("entered get secret");
         euint32[] memory mayBeSecret = _getSecret(secretId);
-        bytes[] memory encSecret = new bytes[](mayBeSecret.length);
-        for (uint256 i = 0; i < mayBeSecret.length; i++) {
-            euint32 s = TFHE.cmux(_isMember(msg.sender), mayBeSecret[i], TFHE.asEuint32(1));
-            encSecret[i] = TFHE.reencrypt(s, publicKey);
-        }
+        bytes memory encSecret;
+        ebool member = _isMember(msg.sender);
+
+        euint32 s = TFHE.cmux(member, mayBeSecret[0], TFHE.asEuint32(1));
+        encSecret = TFHE.reencrypt(s, publicKey);
+
         return encSecret;
     }
 
-    function createProposal(uint256 _keyStorageID, string calldata _ipfsHash, uint256 _endBlockNum) public returns (uint256) {
+    function createProposal(
+        uint256 _keyStorageID,
+        string calldata _ipfsHash,
+        uint256 _endBlockNum
+    ) public returns (uint256) {
         lastProposalID++;
 
         Proposal storage proposal = proposals[lastProposalID];
@@ -123,9 +137,8 @@ contract PrivateDAO is EncryptedMiniMe, SecretStorage {
         proposalExists(_proposalID)
         returns (
             bytes memory,
-            bytes memory
-            // bytes memory // TODO - add abstain
-            )
+            bytes memory // bytes memory // TODO - add abstain
+        )
     {
         onlySignedPublicKeyFn(publicKey, signature);
         Proposal storage proposal = proposals[_proposalID];
@@ -136,9 +149,12 @@ contract PrivateDAO is EncryptedMiniMe, SecretStorage {
         // Save the results. If not a member you will get (0,0,0)
         // TODO - make it random
 
-
-        (euint32 maybeForVotes, euint32 maybeAgainstVotes, euint32 maybeAbstainVotes) = getVotes(_mayBeMember, proposal.yesVotes, proposal.noVotes, proposal.abstainVotes);
-
+        (euint32 maybeForVotes, euint32 maybeAgainstVotes, euint32 maybeAbstainVotes) = getVotes(
+            _mayBeMember,
+            proposal.yesVotes,
+            proposal.noVotes,
+            proposal.abstainVotes
+        );
 
         bytes memory reencForVotes = _getReencValue(maybeForVotes, publicKey);
         bytes memory reencAgainstVotes = _getReencValue(maybeAgainstVotes, publicKey);
@@ -151,7 +167,12 @@ contract PrivateDAO is EncryptedMiniMe, SecretStorage {
         );
     }
 
-    function getVotes(ebool _mayBeMember, euint32 yesVotes, euint32 againstVotes, euint32 abstainVotes) internal view returns(euint32 maybeForVotes, euint32 maybeAgainstVotes, euint32 maybeAbstainVotes) {
+    function getVotes(
+        ebool _mayBeMember,
+        euint32 yesVotes,
+        euint32 againstVotes,
+        euint32 abstainVotes
+    ) internal view returns (euint32 maybeForVotes, euint32 maybeAgainstVotes, euint32 maybeAbstainVotes) {
         euint32 zero = TFHE.asEuint32(0);
 
         maybeForVotes = TFHE.cmux(_mayBeMember, yesVotes, zero);
@@ -159,11 +180,12 @@ contract PrivateDAO is EncryptedMiniMe, SecretStorage {
         maybeAbstainVotes = TFHE.cmux(_mayBeMember, abstainVotes, zero);
     }
 
-    function _getReencValue(euint32 value, bytes32 publicKey) internal view returns(bytes memory) {
+    function _getReencValue(euint32 value, bytes32 publicKey) internal view returns (bytes memory) {
         return TFHE.reencrypt(value, publicKey);
     }
 
-     function onlySignedPublicKeyFn(bytes32 publicKey, bytes calldata signature) internal view onlySignedPublicKey(publicKey, signature) {
-
-     }
+    function onlySignedPublicKeyFn(
+        bytes32 publicKey,
+        bytes calldata signature
+    ) internal view onlySignedPublicKey(publicKey, signature) {}
 }

@@ -3,6 +3,7 @@
 pragma solidity >=0.8.13 <0.9.0;
 
 import "fhevm/lib/TFHE.sol";
+import "hardhat/console.sol";
 
 abstract contract SecretStorage {
     uint256 private lastId;
@@ -15,6 +16,7 @@ abstract contract SecretStorage {
     }
 
     function _getSecret(uint256 _id) internal view returns (euint32[] memory) {
+        console.log("secretId %d", _id);
         return secrets[_id];
     }
 }
